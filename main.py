@@ -163,29 +163,42 @@ def _compute_pvalues(areas, metadata, stimulus):
     # Get groups
     groups = metadata.loc[stimulus_mask, "Pheno_ext"]
     group1, group2 = np.sort(groups.unique())
+    print(group1, group2)
 
-    # Compute Shapiro test for normality
-    pvals_normality = areas.apply(
-        lambda row: shapiro(pd.to_numeric(row, errors="coerce"))[1], axis=1
-    )
-
-    # Split data by groups
     expr_1 = areas.loc[:, groups == group2].astype(float)  # Vaccinated
     expr_2 = areas.loc[:, groups == group1].astype(float)  # Placebo
 
+    # Apply Saphiro test per row (protein)
+    pvals_norm_vaccinated = expr_1.apply(
+        lambda row: shapiro(pd.to_numeric(row, errors="coerce").dropna())[1], axis=1
+    )
+
+    pvals_norm_placebo = expr_2.apply(
+        lambda row: shapiro(pd.to_numeric(row, errors="coerce").dropna())[1],axis=1
+    )
+
+    # Combinar los resultados en un DataFrame
+    pvals_normality = pd.DataFrame({
+        "pval_norm_vaccinated": pvals_norm_vaccinated,
+        "pval_norm_placebo": pvals_norm_placebo
+    })
+
     # Compute p-values based on normality test
-    def choose_test(pval, expr1, expr2):
-        if pval < 0.05:
+    def choose_test(pval_vac, pval_pla, expr1, expr2):
+        if (pval_vac < 0.05) or (pval_pla < 0.05):
             return mannwhitneyu(expr1, expr2, alternative="two-sided")[1]
-        return ttest_ind(expr1, expr2, nan_policy="omit", equal_var=False)[1]
+        else:
+            return ttest_ind(expr1, expr2, nan_policy="omit", equal_var=False)[1]
 
     pvals = pd.Series(
         [
-            choose_test(pval, e1, e2)
-            for pval, e1, e2 in zip(pvals_normality, expr_1.values, expr_2.values)
+            choose_test(pval_vac, pval_pla, e1, e2)
+            for pval_vac, pval_pla, e1, e2 in zip(
+                pvals_norm_vaccinated, pvals_norm_placebo, expr_1.values, expr_2.values
+            )
         ],
         index=areas.index,
-    )
+        )
 
     # Adjust p-values
     pvals_adj = multipletests(pvals, method="fdr_bh")[1]

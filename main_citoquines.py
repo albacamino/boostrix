@@ -68,6 +68,39 @@ def _join_data(df1, df2, df3, metadata):
     citoquines = citoquines.apply(pd.to_numeric, errors="ignore")
 
     return citoquines
+def _compute_pvalues(cytokynes, stimulus, cytokyne):
+    results = []
+    # Filter rows by stimulus
+    subset = cytokynes[cytokynes["Estimulacion"] == stimulus]
+
+    # Extraer solo las columnas de interés: citoquina + grupo
+    # Exract interest columns: cytokyne + group
+    areas = subset[[cytokyne, "Vacunado_Placebo"]].dropna()
+
+    vac = areas[areas["Vacunado_Placebo"] == "Vacunado"][cytokyne]
+    plac = areas[areas["Vacunado_Placebo"] == "Placebo"][cytokyne]
+
+    # Normality test
+    normal_vac = stats.shapiro(vac).pvalue > 0.05
+    normal_plac = stats.shapiro(plac).pvalue > 0.05
+
+
+    # Select test
+    if normal_vac and normal_plac:
+        test_type = "t-test"
+        _, pval = stats.ttest_ind(vac, plac, equal_var=False)
+    else:
+        test_type = "Mann-Whitney"
+        _, pval = stats.mannwhitneyu(vac, plac, alternative="two-sided")
+
+    results.append({
+        "Stimulus": stimulus,
+        "Cytokine": cytokyne,
+        "Test": test_type,
+        "p_value": pval
+    })
+
+    return results
 
 if __name__== "__main__":
 
@@ -90,4 +123,6 @@ if __name__== "__main__":
     )
     
     citoquines = pd.read_csv(output_file)
-    print(citoquines)
+    for stimulus in ["Bexcero", "LPS"]:
+        for cytokyne in ["IFNalpha", "IFNgamma"]:
+            print(_compute_pvalues(cytokynes, stimulus, cytokyne))

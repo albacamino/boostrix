@@ -123,6 +123,6 @@ if __name__== "__main__":
     )
     
     citoquines = pd.read_csv(output_file)
-    for stimulus in ["Bexcero", "LPS"]:
-        for cytokyne in ["IFNalpha", "IFNgamma"]:
+    for stimulus in ['RPMI' 'LPS' 'Bexcero' 'HBVaxpro' 'Poly_C']:
+        for cytokyne in  ["IFNalpha","IFNgamma","IL10","IL12p70","IL1beta","IL21","IL6","IL8","IP10","MCP1","MIP1alpha","RANTES","TNFalpha"]:
             print(_compute_pvalues(cytokynes, stimulus, cytokyne))

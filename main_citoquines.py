@@ -69,11 +69,11 @@ def _join_data(df1, df2, df3, metadata):
 
     return citoquines
 def _compute_pvalues(cytokynes, stimulus, cytokyne):
+   
     results = []
     # Filter rows by stimulus
     subset = cytokynes[cytokynes["Estimulacion"] == stimulus]
 
-    # Extraer solo las columnas de interés: citoquina + grupo
     # Exract interest columns: cytokyne + group
     areas = subset[[cytokyne, "Vacunado_Placebo"]].dropna()
 

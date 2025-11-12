@@ -69,6 +69,63 @@ def _join_data(df1, df2, df3, metadata):
 
     return citoquines
 
+def _plot_pca(cytokynes, color_col="Batch"):
+    
+    # Select the numerical columns (cytokines)
+    cytokine_data = cytokynes.iloc[:, :13].copy()
+
+    # Impute NA values with mean value for each column (cytokine)
+    cytokine_data = cytokine_data.fillna(cytokine_data.mean())
+
+    # Scale the data (mean=0, var=1)
+    scaler = StandardScaler()
+    cytokine_scaled = scaler.fit_transform(cytokine_data)
+
+    # PCA
+    pca = PCA(n_components=2)
+    pca_result = pca.fit_transform(cytokine_scaled)
+
+    # DataFrame with results
+    pca_df = pd.DataFrame({
+    "PC1": pca_result[:, 0],
+    "PC2": pca_result[:, 1],
+    color_col: cytokynes[color_col].values
+    }, index=cytokynes.index)
+
+    # Group colors
+    custom_colors = ["#FFD700", "#FF4500", "#32CD32", "#1E90FF", "#9370DB"]
+    unique_batches = pca_df[color_col].unique()
+    color_map = {batch: custom_colors[i % len(custom_colors)] for i, batch in enumerate(unique_batches)}
+
+    # PCA plot
+    fig, ax = plt.subplots(figsize=(8, 6))
+
+    for batch in unique_batches:
+        subset = pca_df[pca_df[color_col] == batch]
+        ax.scatter(
+            subset["PC1"], subset["PC2"],
+            color=color_map[batch],
+            label=batch,
+            s=120,
+            edgecolor="k",
+            alpha=0.85
+        )
+
+    # LaTeX-style axis labels (matching volcano)
+    ax.set_xlabel(
+        rf"$\mathrm{{PC1}}\ (\mathrm{{{pca.explained_variance_ratio_[0] * 100:.1f}\%}})$",fontsize=16,
+    )
+    ax.set_ylabel(rf"$\mathrm{{PC2}}\ (\mathrm{{{pca.explained_variance_ratio_[1] * 100:.1f}\%}})$",fontsize=16,
+    )
+
+    ax.legend(title=color_col, bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.tight_layout()
+
+    # Save figure
+    output_path = os.path.join("PCA_cytokynes_batch.png")
+    plt.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
 
 if __name__== "__main__":
 

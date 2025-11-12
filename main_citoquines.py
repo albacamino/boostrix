@@ -128,15 +128,21 @@ def _plot_pca(cytokynes, color_col="Batch"):
 
 def _normalize(cytokines):
     # Normalize areas using Quantile Transformer
-    return pd.DataFrame(
-        QuantileTransformer(
-            n_quantiles=min(1000, cytokines.shape[0]),
-            output_distribution="normal",
-            random_state=42,
-        ).fit_transform(cytokines),
-        index=cytokines.index,
-        columns=cytokines.columns,
+    cytokines = cytokines.copy()  # para no modificar el original
+
+    # Seleccionamos solo las columnas numéricas (las 13 primeras)
+    numeric_cols = cytokines.columns[:13]
+
+    # Aplicamos la normalización
+    qt = QuantileTransformer(
+        n_quantiles=min(1000, cytokines.shape[0]),
+        output_distribution="normal",
+        random_state=42
     )
+
+    cytokines[numeric_cols] = qt.fit_transform(cytokines[numeric_cols])
+
+    return cytokines
 
 if __name__== "__main__":
 
@@ -150,8 +156,7 @@ if __name__== "__main__":
     citoquines = _join_data(df1, df2, df3, metadata)
 
     # Normalize the input data
-    expr = cytokines.iloc[:, :13]
-    expr_norm = _normalize(expr)
+    cytokines_norm = _normalize(cytokines)
 
     # Correct batch effect
     citoquines.to_csv(script_dir / "datos" / "results_citoquines_nonNa.csv", index=True)

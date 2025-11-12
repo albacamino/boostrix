@@ -148,6 +148,67 @@ def _normalize(cytokines):
 
     return cytokines
 
+def _compute_pvalues(cytokines, metadata, stimulus):
+
+    stimulus_mask = metadata["Estimulacion"] == stimulus
+    cytokines_selected = cytokines[cytokines_combat["Estimulacion"] == stimulus]
+
+    cols_expr = cytokines_selected.select_dtypes(include=np.number).columns
+    expr = cytokines_selected[cols_expr]
+
+    # Get groups
+    groups = metadata.loc[stimulus_mask, "Vacunado_Placebo"]
+    group1, group2 = np.sort(groups.unique())
+    expr = expr.T
+
+    expr_1 = expr.loc[:, groups == group2].astype(float)  # Vaccinated
+    expr_2 = expr.loc[:, groups == group1].astype(float)  # Placebo
+
+    # Apply Saphiro test per row (protein)
+    pvals_norm_vaccinated = expr_1.apply(
+        lambda row: stats.shapiro(pd.to_numeric(row, errors="coerce").dropna())[1], axis=1
+    )
+
+    pvals_norm_placebo = expr_2.apply(
+        lambda row: stats.shapiro(pd.to_numeric(row, errors="coerce").dropna())[1],axis=1
+    )
+
+    # Combinar los resultados en un DataFrame
+    pvals_normality = pd.DataFrame({
+        "pval_norm_vaccinated": pvals_norm_vaccinated,
+        "pval_norm_placebo": pvals_norm_placebo
+    })
+
+    # Compute p-values based on normality test
+    def choose_test(pval_vac, pval_pla, expr1, expr2):
+        if (pval_vac < 0.05) or (pval_pla < 0.05):
+            return stats.mannwhitneyu(expr1, expr2, alternative="two-sided")[1]
+        else:
+            return stats.ttest_ind(expr1, expr2, nan_policy="omit", equal_var=False)[1]
+
+    pvals = pd.Series(
+        [
+            choose_test(pval_vac, pval_pla, e1, e2)
+            for pval_vac, pval_pla, e1, e2 in zip(
+                pvals_norm_vaccinated, pvals_norm_placebo, expr_1.values, expr_2.values
+            )
+        ],
+        index=expr.index,
+        )
+
+
+    # Adjust p-values
+    pvals_adj = multipletests(pvals, method="fdr_bh")[1]
+
+    # Create results DataFrame
+    return pd.DataFrame(
+        {
+            "Cytokine": expr.index,
+            "p-value": pvals,
+            "p-value_adjusted": pvals_adj,
+        }
+    )
+
 if __name__== "__main__":
 
     script_dir = Path(__file__).parent
@@ -179,17 +240,13 @@ if __name__== "__main__":
     cytokines_combat["Batch"] = cytokines_combat["Batch"].astype(str)
 
 
-    for stimulus in ["Bexcero"]:
-        stimulus_mask = metadata["Estimulacion"] == stimulus
-        cytokines_selected = cytokines_combat[cytokines_combat["Estimulacion"] == stimulus]
-    
-        cols_expr = cytokines_selected.select_dtypes(include=np.number).columns
-        expr = cytokines_selected[cols_expr]
-        
-        # Get groups
-        groups = metadata.loc[stimulus_mask, "Vacunado_Placebo"]
-        group1, group2 = np.sort(groups.unique())
-
-        expr =expr.T
-        expr_1 = expr.loc[:, groups == group2].astype(float)  # Vaccinated
-        expr_2 = expr.loc[:, groups == group1].astype(float)  # Placebo
+    for stimulus in [
+        "RPMI",
+        "Bexcero",
+        "LPS",
+        "Poly_C",
+        "HBVaxpro"
+    ]:
+        pvalues = _compute_pvalues(cytokines_combat, metadata, stimulus)
+        print(pvalues)
+        #pvalues.to_csv("output" / f"pval_cytokines_{stimulus}.txt", index=True)

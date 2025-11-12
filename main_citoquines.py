@@ -126,6 +126,17 @@ def _plot_pca(cytokynes, color_col="Batch"):
     plt.savefig(output_path, dpi=300, bbox_inches="tight")
     plt.close(fig)
 
+def _normalize(cytokines):
+    # Normalize areas using Quantile Transformer
+    return pd.DataFrame(
+        QuantileTransformer(
+            n_quantiles=min(1000, cytokines.shape[0]),
+            output_distribution="normal",
+            random_state=42,
+        ).fit_transform(cytokines),
+        index=cytokines.index,
+        columns=cytokines.columns,
+    )
 
 if __name__== "__main__":
 
@@ -137,6 +148,12 @@ if __name__== "__main__":
     metadata = pd.read_csv(script_dir / "datos" / "metadata_boostrix_modificado.csv", index_col=0, dtype=str)
 
     citoquines = _join_data(df1, df2, df3, metadata)
+
+    # Normalize the input data
+    expr = cytokines.iloc[:, :13]
+    expr_norm = _normalize(expr)
+
+    # Correct batch effect
     citoquines.to_csv(script_dir / "datos" / "results_citoquines_nonNa.csv", index=True)
 
     input_file = script_dir / "datos" / "results_citoquines_nonNa.csv"

@@ -174,22 +174,22 @@ if __name__== "__main__":
     )
 
     cytokines_combat = pd.read_csv(output_file, index_col=0)
+
+    # Ensure Batch is str and not a numerical column
     cytokines_combat["Batch"] = cytokines_combat["Batch"].astype(str)
+
+
+    for stimulus in ["Bexcero"]:
+        stimulus_mask = metadata["Estimulacion"] == stimulus
+        cytokines_selected = cytokines_combat[cytokines_combat["Estimulacion"] == stimulus]
     
-    citoquines = pd.read_csv(output_file)
-     for stimulus in ['RPMI']:
-        for cytokyne in ["IFNalpha"]:
-            stimulus_mask = metadata["Estimulacion"] == stimulus
-            cytokynes = cytokynes[cytokynes["Estimulacion"] == stimulus]
-            expr = cytokynes.iloc[:, :13]
+        cols_expr = cytokines_selected.select_dtypes(include=np.number).columns
+        expr = cytokines_selected[cols_expr]
+        
+        # Get groups
+        groups = metadata.loc[stimulus_mask, "Vacunado_Placebo"]
+        group1, group2 = np.sort(groups.unique())
 
-            # Get groups
-            groups = metadata.loc[stimulus_mask, "Vacunado_Placebo"]
-            group1, group2 = np.sort(groups.unique())
-
-            expr =expr.T
-            print(expr)
-            exit(0)
-            expr_1 = expr.loc[:, groups == group2].astype(float)  # Vaccinated
-            expr_2 = expr.loc[:, groups == group1].astype(float)  # Placebo
-
+        expr =expr.T
+        expr_1 = expr.loc[:, groups == group2].astype(float)  # Vaccinated
+        expr_2 = expr.loc[:, groups == group1].astype(float)  # Placebo

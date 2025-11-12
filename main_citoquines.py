@@ -152,10 +152,10 @@ if __name__== "__main__":
 
     script_dir = Path(__file__).parent
 
-    df1 = _load_data(script_dir / "datos" / "New_Batch_22.csv")
-    df2 = _load_data(script_dir / "datos" / "New_Batch_23.csv")
-    df3 = _load_data(script_dir / "datos" / "New_Batch_25.csv")
-    metadata = pd.read_csv(script_dir / "datos" / "metadata_boostrix_modificado.csv", index_col=0, dtype=str)
+    df1 = _load_data(script_dir / "data" / "New_Batch_22.csv")
+    df2 = _load_data(script_dir / "data" / "New_Batch_23.csv")
+    df3 = _load_data(script_dir / "data" / "New_Batch_25.csv")
+    metadata = pd.read_csv(script_dir / "data" / "metadata_boostrix_modificado.csv", index_col=0, dtype=str)
 
     cytokines = _join_data(df1, df2, df3, metadata)
 

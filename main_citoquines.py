@@ -29,12 +29,16 @@ def _load_data(filepath):
     return result
 
 def clean_value(x):
+    # Convert NaN a 0
+    if pd.isna(x):
+        return 0.0
+
     if isinstance(x, str):
         x = x.strip()
-        # Valores menores al límite -> mitad del límite
+        # Values less than the limit -> half the limit
         if re.match(r"^<\s*\d+(\.\d+)?$", x):
             return float(x.replace("<", "").strip()) / 2
-        # Valores mayores al límite -> límite
+        # Values greater than the limit -> limit
         elif re.match(r"^>\s*\d+(\.\d+)?$", x):
             return float(x.replace(">", "").strip())
     return x
@@ -50,9 +54,9 @@ def _join_data(df1, df2, df3, metadata):
 
     # Ensure index are strings
     metadata["Codigo_citoquinas"] = metadata["Codigo_citoquinas"].astype(str).str.strip()
-    citoquines.index = citoquines.index.astype(str).str.strip()
+    cytokines.index = cytokines.index.astype(str).str.strip()
 
-    common_index = citoquines.index.intersection(metadata["Codigo_citoquinas"])
+    common_index = cytokines.index.intersection(metadata["Codigo_citoquinas"])
   
     # Reorder both dataframes to have the same order
     citoquines = citoquines.loc[common_index]
@@ -153,21 +157,24 @@ if __name__== "__main__":
     df3 = _load_data(script_dir / "datos" / "New_Batch_25.csv")
     metadata = pd.read_csv(script_dir / "datos" / "metadata_boostrix_modificado.csv", index_col=0, dtype=str)
 
-    citoquines = _join_data(df1, df2, df3, metadata)
+    cytokines = _join_data(df1, df2, df3, metadata)
 
     # Normalize the input data
     cytokines_norm = _normalize(cytokines)
 
     # Correct batch effect
-    citoquines.to_csv(script_dir / "datos" / "results_citoquines_nonNa.csv", index=True)
+    cytokines_norm.to_csv(script_dir / "data" / "cytokines_normalized.csv", index=True)
 
-    input_file = script_dir / "datos" / "results_citoquines_nonNa.csv"
-    output_file = script_dir / "datos" / "citoquinas_combat.csv"
+    input_file = script_dir / "data" / "cytokines_normalized.csv"
+    output_file = script_dir / "data" / "cytokines_combat.csv"
     
     subprocess.run(
     ["Rscript", "correct_batch_effect.R", str(input_file), str(output_file)],
     check=True
     )
+
+    cytokines_combat = pd.read_csv(output_file, index_col=0)
+    cytokines_combat["Batch"] = cytokines_combat["Batch"].astype(str)
     
     citoquines = pd.read_csv(output_file)
      for stimulus in ['RPMI']:

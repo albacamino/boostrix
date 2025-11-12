@@ -13,11 +13,11 @@ output_file <- args[2]
 df <- read_csv(input_file)
 
 # Asegurar que los factores están bien definidos
-df$Plaque <- as.factor(df$Plaque)
+df$Batch <- as.factor(df$Batch)
 df$Vacunado_Placebo <- as.factor(df$Vacunado_Placebo)
 df$Estimulacion <- as.factor(df$Estimulacion)
 expr <- df %>%
-  select(-Vacunado_Placebo, -Estimulacion, -Plaque, -Sample, -`código lactante`)
+  select(-Vacunado_Placebo, -Estimulacion, -Plaque, -Sample, -`código lactante`, -Pheno_ext)
 
 # Modelo biológico
 mod <- model.matrix(~ Vacunado_Placebo + Estimulacion, data = df)
@@ -25,7 +25,7 @@ mod <- model.matrix(~ Vacunado_Placebo + Estimulacion, data = df)
 # Aplicar ComBat
 combat_data <- ComBat(
   dat = t(as.matrix(expr)),
-  batch = df$Plaque,
+  batch = df$Batch,
   mod = mod,
   par.prior = TRUE,
   prior.plots = FALSE
@@ -39,13 +39,14 @@ rownames(combat_corrected) <- df$Sample
 
 # --- Añadir columnas originales ---
 combat_corrected$Sample <- df$Sample
-combat_corrected$Plaque <- df$Plaque
+combat_corrected$Batch <- df$Batch
 combat_corrected$Vacunado_Placebo <- df$Vacunado_Placebo
 combat_corrected$Estimulacion <- df$Estimulacion
 combat_corrected$`código lactante` <- df$`código lactante`
+combat_corrected$Pheno_ext <- df$Pheno_ext
 
 combat_corrected <- combat_corrected %>%
-  select(Sample, Plaque, Vacunado_Placebo, Estimulacion, `código lactante`, everything())
+  select(Sample, Plaque, Vacunado_Placebo, Estimulacion, `código lactante`, Pheno_ext,  everything())
 
 
 write.csv(combat_corrected,output_file, col.names = TRUE, row.names = FALSE)

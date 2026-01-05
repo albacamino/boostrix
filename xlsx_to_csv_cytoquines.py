@@ -54,10 +54,15 @@ if __name__ == "__main__":
     df_results = _clean_dataframe(df_results)
     df_counts = _clean_dataframe(df_counts)
   
-    # Save results with titles
     with open("datos/output.csv", "w", newline="") as f:
+        #  Count
         f.write('"DataType:","Count"\n')
         df_counts.to_csv(f, index=False, quoting=csv.QUOTE_ALL)
+        
+        # Empty line
         f.write("\n")
+        # Result
         f.write('"DataType:","Result"\n')
         df_results.to_csv(f, index=False, quoting=csv.QUOTE_ALL, na_rep='NaN')
+        # Empty line
+        f.write("\n")

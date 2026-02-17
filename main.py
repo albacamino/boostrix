@@ -218,7 +218,7 @@ def _plot_volcano(results, stimulus, output_dir):
     logFC, pvals = results["log2FC"], results["p-value"]
 
     # Determine significance
-    significance = (pvals < 0.05) & (abs(logFC) > 1)
+    significance = (pvals < 0.05) & (abs(logFC) > 0.5)
 
     # Create volcano plot
     plt.figure(figsize=(8, 10))
@@ -244,14 +244,14 @@ def _plot_volcano(results, stimulus, output_dir):
     # Significance threshold lines
     y_thresh = -np.log10(0.05)
     plt.axhline(y_thresh, color="gray", linestyle="--")
-    plt.axvline(1, color="gray", linestyle="--")
-    plt.axvline(-1, color="gray", linestyle="--")
+    plt.axvline(0.5, color="gray", linestyle="--")
+    plt.axvline(-0.5, color="gray", linestyle="--")
 
     # Only tick at significance thresholds
-    plt.xticks([-1, 1], labels=["-1", "1"])
+    plt.xticks([-0.5, 0.5], labels=["-0.5", "0.5"])
     plt.yticks([y_thresh], labels=[f"{y_thresh:.2f}"])
 
-    plt.tick_params(axis="both", which="major", labelsize=38)
+    plt.tick_params(axis="both", which="major", labelsize=20)
     plt.tight_layout()
 
     # Ensure output directory exists
@@ -387,16 +387,15 @@ def _plot_heatmap(areas, metadata, results, stimulus, output_dir):
         center=0,
         linewidths=0.5,
         linecolor="black",
-        yticklabels=False,
+        yticklabels=True,
         xticklabels=False,
         col_colors=col_colors,
         row_cluster=True,
-        col_cluster=False,
+        col_cluster=True,
         figsize=(8, 10),
         z_score=1,
         dendrogram_ratio=(0.1, 0.05),
         colors_ratio=(0.02, 0.02),
-        cbar_pos=None,
     )
     g.figure.subplots_adjust(top=1, bottom=0, left=0, right=1)
 

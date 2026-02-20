@@ -361,7 +361,7 @@ def _plot_heatmap(areas, metadata, results, stimulus, output_dir):
 
     # Select differentially expressed proteins
     diff_proteins = results[
-        (results["p-value"] < 0.05) & (results["log2FC"].abs() > 1)
+        (results["p-value"] < 0.05) & (results["log2FC"].abs() > 0.5)
     ]["UniProt"]
 
     # Filter areas dataframe
@@ -387,7 +387,7 @@ def _plot_heatmap(areas, metadata, results, stimulus, output_dir):
         center=0,
         linewidths=0.5,
         linecolor="black",
-        yticklabels=True,
+        yticklabels=False,
         xticklabels=False,
         col_colors=col_colors,
         row_cluster=True,

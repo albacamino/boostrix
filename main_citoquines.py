@@ -31,7 +31,7 @@ def _read_table(filepath, header):
     assert end is not None
 
     return pd.read_csv(
-        pd.io.common.StringIO("".join(lines[start + 1 : end])), index_col=1
+        pd.io.common.StringIO("".join(lines[start + 1 : end])), index_col=0
     )
 
 
@@ -304,9 +304,9 @@ def _compute_pvalues(result_placebo, result_vaccinated):
 if __name__ == "__main__":
     script_dir = pl.Path(__file__).parent
 
-    count_1, result_1 = _load_data(script_dir / "datos" / "New_Batch_22.csv")
-    count_2, result_2 = _load_data(script_dir / "datos" / "New_Batch_23.csv")
-    count_3, result_3 = _load_data(script_dir / "datos" / "New_Batch_25.csv")
+    count_1, result_1 = _load_data(script_dir / "data" / "citokines_1.csv")
+    count_2, result_2 = _load_data(script_dir / "data" / "New_Batch_23.csv")
+    count_3, result_3 = _load_data(script_dir / "data" / "New_Batch_25.csv")
 
     count = _join_data(count_1, count_2, count_3)
     result = _join_data(result_1, result_2, result_3)
@@ -367,7 +367,6 @@ if __name__ == "__main__":
 
             plt.ylabel("Concentration")
 
-            # Escribir el p-value encima del plot
             pval = pvals_dict[cytokine]
             if pd.notna(pval):
                 plt.text(

@@ -7,8 +7,8 @@ import csv
 
 def _extract_tables(sheet, table):
 
-    start_row, end_row = 28, 53
-    start_col, end_col = 1, 17 
+    start_row, end_row = 8, 105
+    start_col, end_col = 1, 8
 
     for row in sheet.iter_rows(min_row=start_row, max_row=end_row,
                             min_col=start_col, max_col=end_col,
@@ -19,9 +19,9 @@ def _extract_tables(sheet, table):
 
 def _clean_dataframe(data):
 
-    data = data.iloc[:, 1:]
-    data = data[data.iloc[:, 0] != 'Well']
-    new_columns = ['Location', 'Sample']
+    data = data.iloc[:, 0:]
+    data = data[data.iloc[:, 0] != 'Type']
+    new_columns = ['Sample', 'Location']
 
     for col in data.columns[2:]:
         new_columns.append(col.split('(')[0].strip())
@@ -38,8 +38,8 @@ def _clean_dataframe(data):
     return data
 
 if __name__ == "__main__":
-    wb = load_workbook('datos/boostrix_results_noraw.xlsx')
-    results = wb['FI']
+    wb = load_workbook('data/citoquinas_1.xlsx')
+    results = wb['FI-Bckg']
     counts = wb["Bead Count"]
     
     results_table = []
@@ -47,14 +47,14 @@ if __name__ == "__main__":
 
     results = _extract_tables(results, results_table)
     counts = _extract_tables(counts, count_table)
-
+  
     df_results = pd.DataFrame(results[1:], columns=results[0])
     df_counts = pd.DataFrame(counts[1:], columns=counts[0])
-   
+
     df_results = _clean_dataframe(df_results)
     df_counts = _clean_dataframe(df_counts)
   
-    with open("datos/output.csv", "w", newline="") as f:
+    with open("data/citokines_1.csv", "w", newline="") as f:
         #  Count
         f.write('"DataType:","Count"\n')
         df_counts.to_csv(f, index=False, quoting=csv.QUOTE_ALL)

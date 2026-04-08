@@ -305,7 +305,7 @@ if __name__ == "__main__":
     script_dir = pl.Path(__file__).parent
 
     count_1, result_1 = _load_data(script_dir / "data" / "citokines_1.csv")
-    count_2, result_2 = _load_data(script_dir / "data" / "New_Batch_23.csv")
+    count_2, result_2 = _load_data(script_dir / "data" / "citokines_2.csv")
     count_3, result_3 = _load_data(script_dir / "data" / "New_Batch_25.csv")
 
     count = _join_data(count_1, count_2, count_3)

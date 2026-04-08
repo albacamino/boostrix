@@ -38,7 +38,7 @@ def _clean_dataframe(data):
     return data
 
 if __name__ == "__main__":
-    wb = load_workbook('data/citoquinas_1.xlsx')
+    wb = load_workbook('data/citoquinas_2.xlsx')
     results = wb['FI-Bckg']
     counts = wb["Bead Count"]
     
@@ -54,7 +54,7 @@ if __name__ == "__main__":
     df_results = _clean_dataframe(df_results)
     df_counts = _clean_dataframe(df_counts)
   
-    with open("data/citokines_1.csv", "w", newline="") as f:
+    with open("data/citokines_2.csv", "w", newline="") as f:
         #  Count
         f.write('"DataType:","Count"\n')
         df_counts.to_csv(f, index=False, quoting=csv.QUOTE_ALL)

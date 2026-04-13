@@ -7,7 +7,7 @@ import csv
 
 def _extract_tables(sheet, table):
 
-    start_row, end_row = 8, 105
+    start_row, end_row = 8, 73
     start_col, end_col = 1, 8
 
     for row in sheet.iter_rows(min_row=start_row, max_row=end_row,
@@ -38,23 +38,29 @@ def _clean_dataframe(data):
     return data
 
 if __name__ == "__main__":
-    wb = load_workbook('data/citoquinas_2.xlsx')
+    wb = load_workbook('data/citoquinas_3.xlsx')
     results = wb['FI-Bckg']
     counts = wb["Bead Count"]
+    obs_conc = wb["Obs Conc"]
     
     results_table = []
     count_table = []
+    obs_conc_table = []
 
     results = _extract_tables(results, results_table)
     counts = _extract_tables(counts, count_table)
+    obs_conc = _extract_tables(obs_conc, obs_conc_table)
   
     df_results = pd.DataFrame(results[1:], columns=results[0])
     df_counts = pd.DataFrame(counts[1:], columns=counts[0])
+    df_obs_conc = pd.DataFrame(obs_conc[1:], columns=obs_conc[0])
+
 
     df_results = _clean_dataframe(df_results)
     df_counts = _clean_dataframe(df_counts)
+    df_obs_conc = _clean_dataframe(df_obs_conc)
   
-    with open("data/citokines_2.csv", "w", newline="") as f:
+    with open("data/citokines_3.csv", "w", newline="") as f:
         #  Count
         f.write('"DataType:","Count"\n')
         df_counts.to_csv(f, index=False, quoting=csv.QUOTE_ALL)
@@ -64,5 +70,10 @@ if __name__ == "__main__":
         # Result
         f.write('"DataType:","Result"\n')
         df_results.to_csv(f, index=False, quoting=csv.QUOTE_ALL, na_rep='NaN')
+        # Empty line
+        f.write("\n")
+        # Observated Concentration
+        f.write('"DataType:","Obs Concentration"\n')
+        df_obs_conc.to_csv(f, index=False, quoting=csv.QUOTE_ALL, na_rep='NaN')
         # Empty line
         f.write("\n")

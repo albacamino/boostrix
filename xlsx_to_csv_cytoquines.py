@@ -39,7 +39,6 @@ def _clean_dataframe(data):
         data[col] = data[col].replace("***", np.nan)
         # Fill blank spaces with 0
         data[col] = data[col].replace("", "0")
-        data[col] = pd.to_numeric(data[col].str.replace(",", "."), errors="coerce")
 
     return data
 
